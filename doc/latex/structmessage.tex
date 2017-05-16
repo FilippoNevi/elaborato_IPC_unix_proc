@@ -1,0 +1,37 @@
+\hypertarget{structmessage}{}\section{Riferimenti per la struct message}
+\label{structmessage}\index{message@{message}}
+
+
+Struttura dati che descrive il formato dei messaggi inviati da child a parent.  
+
+
+
+
+{\ttfamily \#include $<$child.\+h$>$}
+
+\subsection*{Campi}
+\begin{DoxyCompactItemize}
+\item 
+long {\bfseries mtype}\hypertarget{structmessage_a9e469dd197785e3c791a15cbc10c8626}{}\label{structmessage_a9e469dd197785e3c791a15cbc10c8626}
+
+\item 
+int \hyperlink{structmessage_a8a9d17e76a420172b15e2a2fbc99d46e}{pid}\hypertarget{structmessage_a8a9d17e76a420172b15e2a2fbc99d46e}{}\label{structmessage_a8a9d17e76a420172b15e2a2fbc99d46e}
+
+\begin{DoxyCompactList}\small\item\em indica il tipo di messaggio (M\+S\+G\+\_\+\+T\+Y\+PE) \end{DoxyCompactList}\item 
+int \hyperlink{structmessage_ac1ed3f951f2b38883f3038f0530126d5}{riga}\hypertarget{structmessage_ac1ed3f951f2b38883f3038f0530126d5}{}\label{structmessage_ac1ed3f951f2b38883f3038f0530126d5}
+
+\begin{DoxyCompactList}\small\item\em indica il pid del figlio \end{DoxyCompactList}\item 
+int \hyperlink{structmessage_a70bb2fdef19242fa0aeea37ef51c7bc2}{colonna}\hypertarget{structmessage_a70bb2fdef19242fa0aeea37ef51c7bc2}{}\label{structmessage_a70bb2fdef19242fa0aeea37ef51c7bc2}
+
+\begin{DoxyCompactList}\small\item\em riga usata per i calcoli (matrice A per moltiplicazione, C per somma) \end{DoxyCompactList}\item 
+int \hyperlink{structmessage_a4604b383eaa5781bdd8f79b43f6a204e}{operation}\hypertarget{structmessage_a4604b383eaa5781bdd8f79b43f6a204e}{}\label{structmessage_a4604b383eaa5781bdd8f79b43f6a204e}
+
+\begin{DoxyCompactList}\small\item\em colonna usata per i calcoli (matrice B) \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Descrizione dettagliata}
+Struttura dati che descrive il formato dei messaggi inviati da child a parent. 
+
+La documentazione per questa struct è stata generata a partire dal seguente file\+:\begin{DoxyCompactItemize}
+\item 
+\hyperlink{child_8h}{child.\+h}\end{DoxyCompactItemize}
