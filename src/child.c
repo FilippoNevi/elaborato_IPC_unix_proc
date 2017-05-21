@@ -1,7 +1,9 @@
 #include "child.h"
 #include "utils.h"
+#include <time.h>
 
 void execute(int pipe_fd){
+
 short termina = 0;
 
 int shmem_A, shmem_B, shmem_C, shmem_somma;
@@ -10,6 +12,7 @@ int riga, colonna, ordine, cmd;
 int res;
 int msgid;
 char c[64];
+char buff[128];
 
 	res = msgget(MSG_KEY, 0666);
 	if (res == -1){
@@ -73,10 +76,12 @@ char c[64];
 		int n = read(pipe_fd, c, 64);
 		c[n] = '\0';
 
-
 		estrai_dati(&cmd, &riga, &colonna, &ordine, c);
 
 		if (cmd == CHILD_MOLTIPLICA){ 
+
+			sprintf(buff, "Processo figlio >> %d -> Eseguo la moltiplicazione [%d][%d]\n", getpid(), riga, colonna);
+			stampa(buff);
 	
 			int mul = moltiplica(mat_A, mat_B, riga, colonna, ordine);
 
@@ -96,6 +101,9 @@ char c[64];
 		if (cmd == CHILD_SOMMA){
 
 			struct sembuf operation;
+
+			sprintf(buff, "Processo figlio >> %d -> Eseguo la somma [%d]\n", getpid(), riga);
+			stampa(buff);
 
 			//operation init
 

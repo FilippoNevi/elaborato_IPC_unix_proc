@@ -268,7 +268,7 @@ int sem_id;
 		write(param_pipe[(p_index + 1) % num_processi][1], buff_param, strlen(buff_param));
 		num_working++;
 
-	} else{
+	} else {
 
 		for (i = 0; i < ordine * ordine; i++){         //per semplicità
 
@@ -279,31 +279,34 @@ int sem_id;
 				write(param_pipe[num_working][1], buff_param, strlen(buff_param));
 			}
 
-			//attendo che un processo termini per potergli dare del nuovo lavoro da fare
-			msgrcv(msgid, &messaggio, sizeof(message) - sizeof(long), MSG_TYPE, 0);	
+			if (num_working < num_processi){
 
-			if (messaggio.operation == CHILD_MOLTIPLICA){
-				control_matrix[messaggio.riga][messaggio.colonna] = 1;	//calcolo effettuato
-			}
-			//trovo l'indice del processo che ha terminato -> lo uso per mandare sulla sua pipe
-			//il prossimo comando da eseguire
-			int p_index = position(pids, messaggio.pid, num_processi);
-				
-			num_working--;
+				//attendo che un processo termini per potergli dare del nuovo lavoro da fare
+				msgrcv(msgid, &messaggio, sizeof(message) - sizeof(long), MSG_TYPE, 0);	
 
-			//se ho ancora delle moltiplicazioni da fare... 
-			if (i < ordine * ordine){
-				genera_parametri(i/ordine, i%ordine, ordine, CHILD_MOLTIPLICA, buff_param);
-				write(param_pipe[p_index][1], buff_param, strlen(buff_param));
-				
-				num_working++;
+				if (messaggio.operation == CHILD_MOLTIPLICA){
+					control_matrix[messaggio.riga][messaggio.colonna] = 1;	//calcolo effettuato
+				}
+				//trovo l'indice del processo che ha terminato -> lo uso per mandare sulla sua pipe
+				//il prossimo comando da eseguire
+				int p_index = position(pids, messaggio.pid, num_processi);
+					
+				num_working--;
+
+				//se ho ancora delle moltiplicazioni da fare... 
+				if (i < ordine * ordine){
+					genera_parametri(i/ordine, i%ordine, ordine, CHILD_MOLTIPLICA, buff_param);
+					write(param_pipe[p_index][1], buff_param, strlen(buff_param));
+					
+					num_working++;
+				}
 			}
 
 		}
 	}
 	
 	i = 0;		//indica quanti processi posso allocare ancora (se numProcessi > ordine * ordine)
-	int r;
+	int r;		//riga da sommare
 
 	while(num_working > 0){
 		msgrcv(msgid, &messaggio, sizeof(message) - sizeof(long), MSG_TYPE, 0);	
