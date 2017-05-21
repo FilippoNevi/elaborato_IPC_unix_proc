@@ -1,11 +1,8 @@
 #include "child.h"
 #include "utils.h"
-#include <time.h>
 
 void execute(int pipe_fd){
 short termina = 0;
-
-srand(time(NULL));
 
 int shmem_A, shmem_B, shmem_C, shmem_somma;
 int sem;
@@ -24,9 +21,6 @@ char buff[128];
 
 	while(!termina){
 
-		int i, r=rand()%1000;
-		for(i=0;i<r*10000;i++);
-
 		int n = read(pipe_fd, c, 64);
 		c[n] = '\0';
 
@@ -39,7 +33,6 @@ char buff[128];
 		sem = semget(SEM_KEY, 1, 0666);
 
 		if (shmem_A == -1){
-			perror("Errore attach matrice A figlio\n()");
 			stampa("Errore durante l'allocazione di memoria condivisa per matrice A (child)\n");
 			exit(1);
 		}
@@ -87,7 +80,7 @@ char buff[128];
 		if (cmd == CHILD_MOLTIPLICA){ 
 
 			sprintf(buff, "Figlio >> %d, MOLTIPLICA -> [%d][%d]\n", getpid(), riga, colonna);
-			//stampa(buff);
+			stampa(buff);
 	
 			int mul = moltiplica(mat_A, mat_B, riga, colonna, ordine);
 
@@ -107,7 +100,7 @@ char buff[128];
 		if (cmd == CHILD_SOMMA){
 
 			sprintf(buff, "Figlio >> %d, SOMMA -> [%d]\n", getpid(), riga);
-			//stampa(buff);
+			stampa(buff);
 	
 
 			struct sembuf operation;
@@ -152,11 +145,6 @@ char buff[128];
 			stampa("Errore nel detatch sum (child)\n");
 		}
 	}
-
-	
-
-	stampa("Processo terminato\n");
-
 }
 
 int somma(int * matrix, int row, int ordine){

@@ -255,7 +255,7 @@ int sem_id;
 		}
 	}
 	num_working = 0;
-
+	int available = ordine * ordine; 		//indica il prossimo processo che (se ne ho altri) posso allocare
 	//caso particolare
 	if (ordine == 1){
 		genera_parametri(0, 0, ordine, CHILD_MOLTIPLICA, buff_param);
@@ -271,6 +271,7 @@ int sem_id;
 
 	} else{
 
+		
 		for (i = 0; i < ordine * ordine; i++){         //per semplicità
 
 			for (; num_working < num_processi && num_working < ordine * ordine; num_working++, i++){
@@ -299,11 +300,9 @@ int sem_id;
 				
 				num_working++;
 			}
-
 		}
 	}
-	
-	i = 0;		//indica quanti processi posso allocare ancora (se numProcessi > ordine * ordine)
+	i = 0;
 	int r;
 
 	while(num_working > 0){
@@ -320,8 +319,23 @@ int sem_id;
 			set_row(control_matrix, ordine, messaggio.riga, 2);
 		}
 
+		if (available < num_processi && i < ordine){
+			//cerco la prossima riga
+			r = get_next_row(control_matrix, ordine);
+
+			//ho trovato la riga da sommare... altrimenti aspetto un nuovo processo
+			if (r != -1){
+				i++;
+				genera_parametri(r, 0, ordine, CHILD_SOMMA, buff_param);
+				write(param_pipe[available][1], buff_param, strlen(buff_param));
+				set_row(control_matrix, ordine, r, 2);
+				num_working++;
+				available++;
+			}
+		}
+
 		//Ci sono ancora righe da sommare
-		if (i < ordine){
+		else if (i < ordine){
 			//cerco la prossima riga
 			r = get_next_row(control_matrix, ordine);
 
