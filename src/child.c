@@ -3,8 +3,9 @@
 #include <time.h>
 
 void execute(int pipe_fd){
-
 short termina = 0;
+
+srand(time(NULL));
 
 int shmem_A, shmem_B, shmem_C, shmem_somma;
 int sem;
@@ -20,68 +21,73 @@ char buff[128];
 		exit(1);
 	}
 
-	shmem_A = shmget(SHM_KEY_A, sizeof(int[ordine][ordine]), 0666); 	
-	shmem_B = shmget(SHM_KEY_B, sizeof(int[ordine][ordine]), 0666); 
-	shmem_C = shmget(SHM_KEY_C, sizeof(int[ordine][ordine]), 0666);
-	shmem_somma = shmget(SHM_KEY_SOMMA, sizeof(int), 0666);
-	sem = semget(SEM_KEY, 1, 0666);
-
-	if (shmem_A == -1){
-		stampa("Errore durante l'allocazione di memoria condivisa per matrice A (child)\n");
-		exit(1);
-	}
-	if (shmem_B == -1){
-		stampa("Errore durante l'allocazione di memoria condivisa per matrice B (child)\n");
-		exit(1);
-	}
-	if (shmem_C == -1){
-		stampa("Errore durante l'allocazione di memoria condivisa per matrice C (child)\n");
-		exit(1);
-	}
-	if (sem == -1){
-		stampa("Errore durante semget (child)\n");
-		exit(1);
-	}
-
-	int * mat_A = shmat(shmem_A, NULL, 0);
-	if ((void*)mat_A == -1){
-		stampa("Errore attach memoria A (child)\n");
-		exit(1);
-	}
-	int * mat_B = shmat(shmem_B, NULL, 0);
-	if ((void*)mat_B == -1){
-		stampa("Errore attach memoria B (child)\n");
-		exit(1);
-	}
-	int * mat_C = shmat(shmem_C, NULL, 0);
-	if ((void*)mat_C == -1){
-		stampa("Errore attach memoria C (child)\n");
-		exit(1);
-	}
-
-	int * sum = shmat(shmem_somma, NULL, 0);
-	if ((void*)sum == -1){
-		stampa("Errore attach memoria somma (child)\n");
-		exit(1);
-	}
-
-	msgid = msgget(MSG_KEY, 0666);
-	if (msgid == -1){
-		stampa("Errore msgget child\n");
-		exit(1);
-	}
 
 	while(!termina){
+
+		int i, r=rand()%1000;
+		for(i=0;i<r*10000;i++);
 
 		int n = read(pipe_fd, c, 64);
 		c[n] = '\0';
 
 		estrai_dati(&cmd, &riga, &colonna, &ordine, c);
 
+		shmem_A = shmget(SHM_KEY_A, sizeof(int[ordine][ordine]), 0666); 	
+		shmem_B = shmget(SHM_KEY_B, sizeof(int[ordine][ordine]), 0666); 
+		shmem_C = shmget(SHM_KEY_C, sizeof(int[ordine][ordine]), 0666);
+		shmem_somma = shmget(SHM_KEY_SOMMA, sizeof(int), 0666);
+		sem = semget(SEM_KEY, 1, 0666);
+
+		if (shmem_A == -1){
+			perror("Errore attach matrice A figlio\n()");
+			stampa("Errore durante l'allocazione di memoria condivisa per matrice A (child)\n");
+			exit(1);
+		}
+		if (shmem_B == -1){
+			stampa("Errore durante l'allocazione di memoria condivisa per matrice B (child)\n");
+			exit(1);
+		}
+		if (shmem_C == -1){
+			stampa("Errore durante l'allocazione di memoria condivisa per matrice C (child)\n");
+			exit(1);
+		}
+		if (sem == -1){
+			stampa("Errore durante semget (child)\n");
+			exit(1);
+		}
+
+		int * mat_A = shmat(shmem_A, NULL, 0);
+		if ((void*)mat_A == -1){
+			stampa("Errore attach memoria A (child)\n");
+			exit(1);
+		}
+		int * mat_B = shmat(shmem_B, NULL, 0);
+		if ((void*)mat_B == -1){
+			stampa("Errore attach memoria B (child)\n");
+			exit(1);
+		}
+		int * mat_C = shmat(shmem_C, NULL, 0);
+		if ((void*)mat_C == -1){
+			stampa("Errore attach memoria C (child)\n");
+			exit(1);
+		}
+
+		int * sum = shmat(shmem_somma, NULL, 0);
+		if ((void*)sum == -1){
+			stampa("Errore attach memoria somma (child)\n");
+			exit(1);
+		}
+
+		msgid = msgget(MSG_KEY, 0666);
+		if (msgid == -1){
+			stampa("Errore msgget child\n");
+			exit(1);
+		}
+
 		if (cmd == CHILD_MOLTIPLICA){ 
 
-			sprintf(buff, "Processo figlio >> %d -> Eseguo la moltiplicazione [%d][%d]\n", getpid(), riga, colonna);
-			stampa(buff);
+			sprintf(buff, "Figlio >> %d, MOLTIPLICA -> [%d][%d]\n", getpid(), riga, colonna);
+			//stampa(buff);
 	
 			int mul = moltiplica(mat_A, mat_B, riga, colonna, ordine);
 
@@ -100,10 +106,11 @@ char buff[128];
 		}
 		if (cmd == CHILD_SOMMA){
 
-			struct sembuf operation;
+			sprintf(buff, "Figlio >> %d, SOMMA -> [%d]\n", getpid(), riga);
+			//stampa(buff);
+	
 
-			sprintf(buff, "Processo figlio >> %d -> Eseguo la somma [%d]\n", getpid(), riga);
-			stampa(buff);
+			struct sembuf operation;
 
 			//operation init
 
@@ -131,12 +138,24 @@ char buff[128];
 		}
 		if (cmd == CHILD_EXIT)
 			termina = 1;
+
+		if (shmdt(mat_A) < 0){
+		stampa("Errore nel detatch A (child)\n");
+		}	
+		if (shmdt(mat_B) < 0){
+			stampa("Errore nel detatch B (child)\n");
+		}	
+		if (shmdt(mat_C) < 0){
+			stampa("Errore nel detatch C (child)\n");
+		}
+		if (shmdt(sum) < 0){
+			stampa("Errore nel detatch sum (child)\n");
+		}
 	}
 
-	shmdt(shmem_A);	
-	shmdt(shmem_B);	
-	shmdt(shmem_C);
-	shmdt(sum);
+	
+
+	stampa("Processo terminato\n");
 
 }
 
