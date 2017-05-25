@@ -369,6 +369,7 @@ int sem_id;
 	//prima di deallocare le risorse, attendo la terminazione di tutti i processi figli
 	while (wait(NULL) > 0);
 
+	
 	if (msgctl(msgid, IPC_RMID, NULL) == -1){
 		stampa("Errore cancellazione coda messaggi\n");
 		return 0;
