@@ -247,6 +247,10 @@ int sem_id;
 				exit(1);
 			}
 			execute(param_pipe[num_working][0]);
+			if (close(param_pipe[num_working][0]) == -1){
+				stampa("Errore chiusura pipe figlio\n");
+				exit(1);
+			}
 			exit(0);
 		}
 		else{					//padre

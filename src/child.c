@@ -2,6 +2,7 @@
 #include "utils.h"
 
 void execute(int pipe_fd){
+
 short termina = 0;
 
 int shmem_A, shmem_B, shmem_C, shmem_somma;
@@ -20,7 +21,7 @@ char buff[128];
 
 
 	while(!termina){
-
+		
 		int n = read(pipe_fd, c, 64);
 		c[n] = '\0';
 
