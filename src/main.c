@@ -137,10 +137,11 @@ int sem_id;
 	matrix_A = create_matrix(ordine);
 	matrix_B = create_matrix(ordine);
 	control_matrix = create_matrix(ordine);
-
+/*
 	for (i = 0; i < ordine; i++)
 		for (j = 0; j < ordine; j++)
 			control_matrix[i][j] = 0;
+*/
 
 	read_matrix(fd_matA, ordine, matrix_A);
 	read_matrix(fd_matB, ordine, matrix_B);
@@ -161,6 +162,11 @@ int sem_id;
 
 	if (shmem_A == -1 || shmem_B == -1 || shmem_C == -1 || shmem_somma == -1){
 		stampa("Errore durante l'allocazione di memoria condivisa per matrice A\n");
+		free_matrix(matrix_A, ordine);
+		free_matrix(matrix_B, ordine);
+		free_matrix(control_matrix, ordine);
+		free(std_buff);
+
 		return 0;
 	}
 
@@ -168,6 +174,11 @@ int sem_id;
 	int * shmatrix_A = shmat(shmem_A, NULL, 0);   //array che emula una matrice
 	if (shmatrix_A == (void *)-1){
 		stampa("Errore attach matrice A\n");
+		free_matrix(matrix_A, ordine);
+		free_matrix(matrix_B, ordine);
+		free_matrix(control_matrix, ordine);
+		free(std_buff);
+
 		return 0;
 	}
 
@@ -177,6 +188,12 @@ int sem_id;
 	int * shmatrix_B = shmat(shmem_B, NULL, 0);   //array che emula una matrice
 	if (shmatrix_B == (void *)-1){
 		stampa("Errore attach matrice B\n");
+
+		free_matrix(matrix_A, ordine);
+		free_matrix(matrix_B, ordine);
+		free_matrix(control_matrix, ordine);
+		free(std_buff);
+
 		return 0;
 	}
 
@@ -186,12 +203,24 @@ int sem_id;
 	int * shmatrix_C = shmat(shmem_C, NULL, 0);   //array che emula una matrice
 	if (shmatrix_C == (void *)-1){
 		stampa("Errore attach matrice C\n");
+
+		free_matrix(matrix_A, ordine);
+		free_matrix(matrix_B, ordine);
+		free_matrix(control_matrix, ordine);
+		free(std_buff);
+
 		return 0;
 	}
 
 	sem_id = semget(SEM_KEY, 1, 0666 | IPC_CREAT | IPC_EXCL);
 	if (sem_id < 0){
 		stampa("Errore nell'allocazione del semaforo\n");
+
+		free_matrix(matrix_A, ordine);
+		free_matrix(matrix_B, ordine);
+		free_matrix(control_matrix, ordine);
+		free(std_buff);
+
 		return 0;
 	}
 
@@ -204,6 +233,11 @@ int sem_id;
 
 	int * shmsomma = shmat(shmem_somma, NULL, 0);   //array che emula una matrice
 	if (shmsomma == (void *)-1){
+		free_matrix(matrix_A, ordine);
+		free_matrix(matrix_B, ordine);
+		free_matrix(control_matrix, ordine);
+		free(std_buff);
+
 		stampa("Errore attach somma\n");
 		return 0;
 	}
@@ -218,12 +252,24 @@ int sem_id;
 	
 	if (pids == NULL){
 		stampa("Errore nella creazione processi\n");
+		free(pids);
+		free_matrix(matrix_A, ordine);
+		free_matrix(matrix_B, ordine);
+		free_matrix(control_matrix, ordine);
+		free(std_buff);
+
 		return 0;
 	}
 
 	msgid = msgget(MSG_KEY, 0666 | IPC_CREAT | IPC_EXCL);
 	if (msgid == -1){
 		stampa("Errore nella creazione della coda messaggi\n");
+		free(pids);
+		free_matrix(matrix_A, ordine);
+		free_matrix(matrix_B, ordine);
+		free_matrix(control_matrix, ordine);
+		free(std_buff);
+
 		return 0;
 	}
 
@@ -233,22 +279,46 @@ int sem_id;
 		
 		if (pipe(param_pipe[num_working]) == -1){
 			stampa("Errore creazione pipe\n");
+			free(pids);
+			free_matrix(matrix_A, ordine);
+			free_matrix(matrix_B, ordine);
+			free_matrix(control_matrix, ordine);
+			free(std_buff);
+
 			return 0;
 		}
 
 		int f = fork();			//salvo nel vettore pids tutti i pid dei processi figli creati 
 		if (f == -1){
 			stampa("Errore nella creazione processi figli\n");
+			free(pids);
+			free_matrix(matrix_A, ordine);
+			free_matrix(matrix_B, ordine);
+			free_matrix(control_matrix, ordine);
+			free(std_buff);
+
 			return 0;
 		}
 		if (f == 0){			//figlio
 			if (close(param_pipe[num_working][1]) == -1){
 				stampa("Errore chiusura pipe figlio\n");
+				free(pids);
+				free_matrix(matrix_A, ordine);
+				free_matrix(matrix_B, ordine);
+				free_matrix(control_matrix, ordine);
+				free(std_buff);
+
 				exit(1);
 			}
 			execute(param_pipe[num_working][0]);
 			if (close(param_pipe[num_working][0]) == -1){
 				stampa("Errore chiusura pipe figlio\n");
+				free(pids);
+				free_matrix(matrix_A, ordine);
+				free_matrix(matrix_B, ordine);
+				free_matrix(control_matrix, ordine);
+				free(std_buff);
+
 				exit(1);
 			}
 			exit(0);
@@ -376,6 +446,12 @@ int sem_id;
 	
 	if (msgctl(msgid, IPC_RMID, NULL) == -1){
 		stampa("Errore cancellazione coda messaggi\n");
+		free(pids);
+		free_matrix(matrix_A, ordine);
+		free_matrix(matrix_B, ordine);
+		free_matrix(control_matrix, ordine);
+		free(std_buff);
+
 		return 0;
 	}
 
@@ -427,6 +503,7 @@ int sem_id;
 	free(pids);
 	free_matrix(matrix_A, ordine);
 	free_matrix(matrix_B, ordine);
+	free_matrix(control_matrix, ordine);
 	free(std_buff);
 	close(fd_matA);
 	close(fd_matB);

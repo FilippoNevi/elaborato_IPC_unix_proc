@@ -13,6 +13,8 @@ int msgid;
 char c[64];
 char buff[128];
 
+	
+
 	res = msgget(MSG_KEY, 0666);
 	if (res == -1){
 		stampa("Errore nella creazione della coda messaggi\n");
